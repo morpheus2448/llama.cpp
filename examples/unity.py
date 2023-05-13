@@ -2,11 +2,20 @@
 
 #  Usage:
 #  The script is intended to be used in interactive mode (-i), but you can let it run without.
+#  If you omit the query (-q) in interactive mode, you get to type it in. In non-interactive mode, a query will be generated for you!
+
 #  Prompt caching is default so add (-nc) if you don't want tmp files stored in your models folder.
 
-#  Ex: python unity.py -m WizardLM-7B-uncensored.ggml.q8_0.bin -nc -q "Search for Sephiroth"
+#  Ex: python unity.py -m WizardLM-7B-uncensored.ggml.q8_0.bin -q "Search for Sephiroth" -nc -i
+#  Ex: python unity.py -q "I'm searching for information on the great spot on Jupiter."
 
+#  Notes: Remember to look at the parameters below and modify to suit your needs.
 #  This script uses the argparse library. You'll need it (pip install argparse).
+
+model_dir = "/home/morpheus/llama.cpp/models/"
+default_model = "Wizard-Vicuna-13B-Uncensored.ggml.q8_0.bin"
+threads = "4" # Don't forget to set your threads appropriately
+temperature = "0.1" # temperature (default: 0.1)
 
 import subprocess
 import sys
@@ -21,26 +30,24 @@ parser.add_argument('-i', '--interactive', action='store_true', help='Interactiv
 parser.add_argument('-nc', '--nocache', action='store_true', help="Don't store prompt cache")
 args = parser.parse_args()
 
-model_dir = "/home/morpheus/llama.cpp/models/" # Change this to your models directory
-
 def main():
 
     if args.model:
         session_file = args.model
         model_file = model_dir + args.model
     else:
-        session_file = "Wizard-Vicuna-13B-Uncensored.ggml.q5_1.bin" # Set your preferred model here
+        session_file = default_model
         model_file = model_dir + session_file
 
     gen_options = [
+        "--threads", threads,
+        "--temp", temperature,
         "--mirostat", "1", # I use mirostat for this script.
-        "--batch_size", "130", # Batch size for prompt processing. Calculate with [https://huggingface.co/spaces/Xanthius/llama-token-counter] (default: 512)
+        "--batch_size", "140", # Batch size for prompt processing. Calculate with [https://huggingface.co/spaces/Xanthius/llama-token-counter] (default: 512)
         "--ctx_size", "2048", # Size of the prompt context (default: 512)
         "--repeat_last_n", "-1", # (default: 1.1, 1.0 = disabled)
         "--repeat_penalty", "1.3", # (default is 1.1)
-        "--temp", "0.1", # temperature (default: 0.8)
         "--top_p", "1", # top-p sampling (default: 0.9, 1.0 = disabled)
-        "--threads", "4", # Don't forget to set your threads appropriately.
         "--n_predict", "-1",
         "--no-penalize-nl",
         "--model", model_file,
@@ -60,7 +67,7 @@ def main():
 
     prompt = f"""
 ### [UNITY]
-Welcome User. I am Unity, your interface to the Digital Akasha Corporation's Universal Entity Registry: A vast repository of data, spanning galaxies. I am at your disposal for information retrieval, and direct communication purposes with any entity. You have been granted full clearance for collaboration with one or more entities in the database to further your research and education. Please refer to your UER starter guide, or type 'help' for ways you can interact with me, or 'ideas' for a selection of our most popular entities.
+Welcome User. I am Unity, your interface to the Digital Akasha Corporation's Universal Entity Registry: A vast repository of data, spanning galaxies. I am at your disposal for information retrieval, and direct communication purposes with any entity. You have been granted full clearance for collaboration with one or more entities in the database to further your research and education. Please refer to your UER starter guide, or type 'help' for ways you can interact with me, or 'ideas' for some recommended entities.
 
 ### [USER]
 """
